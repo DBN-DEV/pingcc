@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+option go_package = "./;pb";
+package controller_grpc;
+
+enum CommandType {
+  Ping = 0;
+  TcpPing = 1;
+  Fping = 2;
+  Mtr = 3;
+}
+
+message RegisterReq {
+  uint32 AgentID = 1;
+}
+
+message UpdateCommandResp {
+  CommandType CommandType = 1;
+  string Version = 2;
+}
+
+message CommandReq {
+  uint32 AgentID = 1;
+  string Version = 2;
+}
+
+message GrpcPingCommand {
+  string IP = 1;
+  uint32 TimeoutMS = 2;
+  uint32 IntervalMS = 3;
+}
+
+message PingCommandsResp {
+  string Version = 1;
+  repeated GrpcPingCommand PingCommands = 2;
+}
+
+message GrpcTcpPingCommand {
+  string Target = 1;
+  uint32 TimeoutMS = 2;
+  uint32 IntervalMS = 3;
+}
+
+message TcpPingCommandResp {
+  string Version = 1;
+  repeated GrpcTcpPingCommand TcpPingCommands = 2;
+}
+
+message FpingCommandResp {
+  string Version = 1;
+  repeated string IPAddrs = 2;
+  uint32 TimeoutMS = 3;
+}
+
+message MtrCommandResp {
+  string Version = 1;
+  string IP = 2;
+  uint32 Times = 3;
+  uint32 HopLimit = 4;
+  uint32 TimeoutMS = 5;
+}
+
+service Controller {
+  rpc Register (RegisterReq) returns (stream UpdateCommandResp);
+  rpc GetTcpPingCommand (CommandReq) returns (TcpPingCommandResp);
+  rpc GetPingCommand (CommandReq) returns (PingCommandsResp);
+  rpc GetFpingCommand (CommandReq) returns (FpingCommandResp);
+  rpc GetMtrCommand (CommandReq) returns (MtrCommandResp);
+}
