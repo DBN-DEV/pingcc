@@ -3,7 +3,7 @@ module ping-cc
 go 1.17
 
 require (
-	github.com/planetscale/vtprotobuf v0.2.0
+	github.com/planetscale/vtprotobuf v0.3.0
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
 	gorm.io/driver/postgres v1.2.2
