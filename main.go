@@ -1,29 +1,32 @@
 package main
 
 import (
+	"github.com/spf13/viper"
 	"net"
 	"ping-cc/service/collector"
 
+	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
+	_ "google.golang.org/grpc/encoding/proto"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
-	"google.golang.org/grpc/encoding"
-
 	"ping-cc/pb"
 	"ping-cc/service/controller"
-
-	"google.golang.org/grpc"
-	_ "google.golang.org/grpc/encoding/proto"
 )
 
 func run() error {
 	encoding.RegisterCodec(vtpb.Codec{})
 
-	collS := grpc.NewServer()
-	ctrlS := grpc.NewServer()
+	viper.SetConfigName("config")
+	viper.SetConfigType("toml")
+	viper.AddConfigPath(".")
+	if err := viper.ReadInConfig(); err != nil {
+		return err
+	}
 
-	dsn := "user=nom password=dashi dbname=nom host=198.18.5.137 port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := viper.GetString("database.dsn")
 	dbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return err
@@ -32,14 +35,13 @@ func run() error {
 	ctrl := controller.New(dbConn)
 	coll := collector.Impl{}
 
+	collS := grpc.NewServer()
+	ctrlS := grpc.NewServer()
 	pb.RegisterControllerServer(ctrlS, ctrl)
 	pb.RegisterCollectorServer(collS, &coll)
 
-	lis, err := net.Listen("tcp", "127.0.0.1:5001")
-	if err != nil {
-		return err
-	}
-	lisCtrl, err := net.Listen("tcp", "127.0.0.1:5000")
+	addr := viper.GetString("server.addr")
+	lis, err := net.Listen("tcp", addr)
 
 	go func() {
 		if err := collS.Serve(lis); err != nil {
@@ -47,7 +49,7 @@ func run() error {
 		}
 	}()
 
-	if err := ctrlS.Serve(lisCtrl); err != nil {
+	if err := ctrlS.Serve(lis); err != nil {
 		return err
 	}
 
