@@ -42,6 +42,9 @@ func run() error {
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
 
 	go func() {
 		if err := collS.Serve(lis); err != nil {
