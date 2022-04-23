@@ -1,4 +1,4 @@
-module ping-cc
+module pingcc
 
 go 1.18
 

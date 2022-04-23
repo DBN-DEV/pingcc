@@ -3,7 +3,7 @@ package collector
 import (
 	"context"
 
-	"ping-cc/pb"
+	"pingcc/pb"
 )
 
 type Impl struct {

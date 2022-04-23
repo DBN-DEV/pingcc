@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"ping-cc/pb"
+	"pingcc/pb"
 )
 
 type Impl struct {

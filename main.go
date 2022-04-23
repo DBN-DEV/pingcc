@@ -1,19 +1,19 @@
 package main
 
 import (
-	"github.com/spf13/viper"
 	"net"
-	"ping-cc/service/collector"
 
 	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/proto"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"ping-cc/pb"
-	"ping-cc/service/controller"
+	"pingcc/pb"
+	"pingcc/service/collector"
+	"pingcc/service/controller"
 )
 
 func run() error {
