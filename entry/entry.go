@@ -1,4 +1,4 @@
-package controller
+package entry
 
 import (
 	"time"
@@ -7,6 +7,8 @@ import (
 )
 
 type Agent struct {
+	db *gorm.DB
+
 	gorm.Model
 
 	// agent 名称 用于给 agent 提供一个可读的记号

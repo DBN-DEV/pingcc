@@ -11,6 +11,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"pingcc/entry"
 	"pingcc/pb"
 	"pingcc/service/collector"
 	"pingcc/service/controller"
@@ -32,13 +33,14 @@ func run() error {
 		return err
 	}
 
-	ctrl := controller.New(dbConn)
-	coll := collector.Impl{}
+	agentRepo := entry.NewAgentRepo(dbConn)
 
+	ctrl := controller.New(agentRepo)
+	coll := collector.New()
 	collS := grpc.NewServer()
 	ctrlS := grpc.NewServer()
 	pb.RegisterControllerServer(ctrlS, ctrl)
-	pb.RegisterCollectorServer(collS, &coll)
+	pb.RegisterCollectorServer(collS, coll)
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)
@@ -46,13 +48,16 @@ func run() error {
 		return err
 	}
 
+	errCh := make(chan error)
 	go func() {
-		if err := collS.Serve(lis); err != nil {
-			return
-		}
+		err := collS.Serve(lis)
+		errCh <- err
 	}()
-
-	if err := ctrlS.Serve(lis); err != nil {
+	go func() {
+		err := ctrlS.Serve(lis)
+		errCh <- err
+	}()
+	if err := <-errCh; err != nil {
 		return err
 	}
 

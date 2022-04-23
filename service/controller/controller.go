@@ -2,49 +2,46 @@ package controller
 
 import (
 	"context"
+	"pingcc/entry"
 	"sync"
-
-	"gorm.io/gorm"
 
 	"pingcc/pb"
 )
 
-type Impl struct {
+type impl struct {
 	pb.UnimplementedControllerServer
 
-	repo      agentRepo
+	repo      entry.AgentRepo
 	chL       sync.RWMutex
 	agentIDCh map[uint]chan *pb.UpdateCommandResp
 }
 
-func New(db *gorm.DB) pb.ControllerServer {
-	repo := &agentRepoImpl{db: db}
-
-	i := Impl{
-		repo:      repo,
+func New(agentRepo entry.AgentRepo) pb.ControllerServer {
+	i := impl{
+		repo:      agentRepo,
 		agentIDCh: make(map[uint]chan *pb.UpdateCommandResp),
 	}
 
 	return &i
 }
 
-func (c *Impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
-	agent, err := c.repo.findPreloadPingCommand(int(req.AgentID))
+func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
+	agent, err := i.repo.FindPreloadPingCommand(int(req.AgentID))
 	if err != nil {
 		return err
 	}
 
-	if err := c.sendInitCommand(agent, server); err != nil {
+	if err := i.sendInitCommand(agent, server); err != nil {
 		return err
 	}
 
-	c.initCH(agent)
+	i.initCH(agent)
 
 	return nil
 }
 
 //　sendInitCommand 给 agent 发送初始化指令
-func (c *Impl) sendInitCommand(agent *Agent, server pb.Controller_RegisterServer) error {
+func (i *impl) sendInitCommand(agent *entry.Agent, server pb.Controller_RegisterServer) error {
 	resps := []*pb.UpdateCommandResp{{
 		CommandType: pb.CommandType_Ping,
 		Version:     agent.ControllerPingCommandVersion,
@@ -63,47 +60,47 @@ func (c *Impl) sendInitCommand(agent *Agent, server pb.Controller_RegisterServer
 }
 
 // initCh 给注册的 agent 初始化 ch
-func (c *Impl) initCH(agent *Agent) {
-	c.chL.Lock()
-	defer c.chL.Unlock()
+func (i *impl) initCH(agent *entry.Agent) {
+	i.chL.Lock()
+	defer i.chL.Unlock()
 
-	if ch, ok := c.agentIDCh[agent.ID]; ok {
+	if ch, ok := i.agentIDCh[agent.ID]; ok {
 		close(ch)
-		delete(c.agentIDCh, agent.ID)
+		delete(i.agentIDCh, agent.ID)
 	}
-	c.agentIDCh[agent.ID] = make(chan *pb.UpdateCommandResp)
+	i.agentIDCh[agent.ID] = make(chan *pb.UpdateCommandResp)
 }
 
-func (c *Impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {
+func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {
 	return nil, nil
 }
 
-func (c *Impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
-	agent, err := c.repo.findPreloadPingCommand(int(req.AgentID))
+func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
+	agent, err := i.repo.FindPreloadPingCommand(int(req.AgentID))
 	if err != nil {
 		return nil, err
 	}
 
-	var commands []*pb.GrpcPingCommand
+	comms := make([]*pb.GrpcPingCommand, 0, len(agent.PingTargets))
 	for _, target := range agent.PingTargets {
-		command := &pb.GrpcPingCommand{
+		comm := &pb.GrpcPingCommand{
 			IP:         target.IP,
 			TimeoutMS:  target.TimeoutMS,
 			IntervalMS: target.IntervalMS,
 		}
-		commands = append(commands, command)
+		comms = append(comms, comm)
 	}
 
 	return &pb.PingCommandsResp{
 		Version:      agent.ControllerPingCommandVersion,
-		PingCommands: commands,
+		PingCommands: comms,
 	}, nil
 }
 
-func (c *Impl) GetFpingCommand(ctx context.Context, req *pb.CommandReq) (*pb.FpingCommandResp, error) {
+func (i *impl) GetFpingCommand(ctx context.Context, req *pb.CommandReq) (*pb.FpingCommandResp, error) {
 	return nil, nil
 }
 
-func (c *Impl) GetMtrCommand(ctx context.Context, req *pb.CommandReq) (*pb.MtrCommandResp, error) {
+func (i *impl) GetMtrCommand(ctx context.Context, req *pb.CommandReq) (*pb.MtrCommandResp, error) {
 	return nil, nil
 }
