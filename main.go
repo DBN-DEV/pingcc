@@ -28,8 +28,11 @@ func run() error {
 	}
 
 	dsn := viper.GetString("database.dsn")
-	dbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	dbConn, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
+		return err
+	}
+	if err := entry.InitTables(dbConn); err != nil {
 		return err
 	}
 
