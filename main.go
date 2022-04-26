@@ -5,6 +5,7 @@ import (
 
 	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/proto"
@@ -12,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"pingcc/entry"
+	"pingcc/log"
 	"pingcc/pb"
 	"pingcc/service/collector"
 	"pingcc/service/controller"
@@ -20,21 +22,26 @@ import (
 func run() error {
 	encoding.RegisterCodec(vtpb.Codec{})
 
-	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
+	// init config
+	viper.SetConfigFile("./config.toml")
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
+	log.L().Info("read config file success", zap.String("path", "./config.toml"))
 
+	// init db connect
 	dsn := viper.GetString("database.dsn")
 	dbConn, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		return err
 	}
+	log.L().Info("init db connect success")
+
+	// init db table
 	if err := entry.InitTables(dbConn); err != nil {
 		return err
 	}
+	log.L().Info("init db tables success")
 
 	agentRepo := entry.NewAgentRepo(dbConn)
 
@@ -50,13 +57,16 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	log.L().Info("create listener success", zap.String("addr", addr))
 
 	errCh := make(chan error)
 	go func() {
+		log.L().Info("start collector service")
 		err := collS.Serve(lis)
 		errCh <- err
 	}()
 	go func() {
+		log.L().Info("start controller service")
 		err := ctrlS.Serve(lis)
 		errCh <- err
 	}()
