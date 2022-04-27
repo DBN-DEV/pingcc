@@ -27,21 +27,21 @@ func run() error {
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
-	log.L().Info("read config file success", zap.String("path", "./config.toml"))
+	log.L().Info("Read config file success", zap.String("path", "./config.toml"))
 
 	// init db connect
 	dsn := viper.GetString("database.dsn")
-	dbConn, err := gorm.Open(postgres.Open(dsn))
+	dbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: log.NewGorm(log.L())})
 	if err != nil {
 		return err
 	}
-	log.L().Info("init db connect success")
+	log.L().Info("Init db connect success")
 
 	// init db table
 	if err := entry.InitTables(dbConn); err != nil {
 		return err
 	}
-	log.L().Info("init db tables success")
+	log.L().Info("Init db tables success")
 
 	agentRepo := entry.NewAgentRepo(dbConn)
 
@@ -57,16 +57,16 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	log.L().Info("create listener success", zap.String("addr", addr))
+	log.L().Info("Create listener success", zap.String("addr", addr))
 
 	errCh := make(chan error)
 	go func() {
-		log.L().Info("start collector service")
+		log.L().Info("Start collector service")
 		err := collS.Serve(lis)
 		errCh <- err
 	}()
 	go func() {
-		log.L().Info("start controller service")
+		log.L().Info("Start controller service")
 		err := ctrlS.Serve(lis)
 		errCh <- err
 	}()
