@@ -1,4 +1,6 @@
-
+.PHONY: build
+build:
+	go build -o pingcc main.go
 
 
 .PHONY: gen-pb

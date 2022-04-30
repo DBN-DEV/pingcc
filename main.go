@@ -3,8 +3,6 @@ package main
 import (
 	"net"
 
-	"pingcc/infra"
-
 	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -15,6 +13,7 @@ import (
 	"pingcc/app/collector"
 	"pingcc/app/controller"
 	"pingcc/entry"
+	"pingcc/infra"
 	"pingcc/log"
 	"pingcc/pb"
 )
