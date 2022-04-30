@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"context"
 	"time"
 
 	"gorm.io/gorm"
@@ -9,7 +10,9 @@ import (
 type Agent struct {
 	db *gorm.DB
 
-	gorm.Model
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 
 	// agent 名称 用于给 agent 提供一个可读的记号
 	Name string
@@ -23,47 +26,34 @@ type Agent struct {
 	AgentTcpPingCommandVersion string
 	// 上次活跃时间，每次控制器收到来自 agent 的请求都更新此值
 	LastActiveTime time.Time
-
-	PingTargets []PingTarget
 }
 
-type PingTarget struct {
-	gorm.Model
+func (a *Agent) PingTargets(ctx context.Context) ([]PingTarget, error) {
+	var targets []PingTarget
+	if err := a.db.WithContext(ctx).Where("id = ?", a.ID).Find(&targets).Error; err != nil {
+		return nil, err
+	}
 
-	// 被 ping 地址
-	IP string `gorm:"index"`
-	// 超时时间 单位毫秒
-	TimeoutMS uint32
-	// 间隔时间 单位毫秒
-	IntervalMS uint32
+	for i := range targets {
+		targets[i].db = a.db
+	}
 
-	// 各种标签
-	// 类型 表示内网或外网 等
-	Type string
-	// 地域 华北华东…………
-	Region string
-	// 省份
-	Province string
-	// 运营商
-	ISP string
-
-	AgentID uint
-	Agent   Agent
+	return targets, nil
 }
 
-type TcpPingTarget struct {
-	gorm.Model
+type AgentRepo interface {
+	Find(ctx context.Context, id uint) (*Agent, error)
+}
 
-	// 被探测的地址 可以是域名，要带端口号
-	Address string `gorm:"index:,type:hash"`
-	// 超时时间 单位毫秒
-	TimeoutMS uint32
-	// 间隔时间 单位毫秒
-	IntervalMS uint32
+type AgentRepoImpl struct {
+	DB *gorm.DB
+}
 
-	// 地域 华北华东…………
-	Region string
+func (i *AgentRepoImpl) Find(ctx context.Context, id uint) (*Agent, error) {
+	a := Agent{db: i.DB}
+	if err := i.DB.WithContext(ctx).Where("id = ?", id).First(&a).Error; err != nil {
+		return nil, err
+	}
 
-	AgentID uint
-	Agent   Agent
+	return &a, nil
 }

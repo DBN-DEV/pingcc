@@ -2,24 +2,14 @@ package entry
 
 import "gorm.io/gorm"
 
-type AgentRepo interface {
-	FindPreloadPingCommand(id int) (*Agent, error)
-}
-
-func NewAgentRepo(db *gorm.DB) AgentRepo {
-	return &agentRepoImpl{db: db}
-}
-
-type agentRepoImpl struct {
-	db *gorm.DB
-}
-
-func (r *agentRepoImpl) FindPreloadPingCommand(id int) (*Agent, error) {
-	var a Agent
-
-	if err := r.db.Where("id = ?", id).Preload("PingTargets").First(&a).Error; err != nil {
-		return nil, err
+func NewRepo(db *gorm.DB) Repo {
+	return Repo{
+		AgentRepo:      &AgentRepoImpl{DB: db},
+		PingTargetRepo: &PingTargetRepoImpl{DB: db},
 	}
+}
 
-	return &a, nil
+type Repo struct {
+	AgentRepo      AgentRepo
+	PingTargetRepo PingTargetRepo
 }

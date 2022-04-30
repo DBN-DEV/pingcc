@@ -3,20 +3,20 @@ package main
 import (
 	"net"
 
+	"pingcc/infra"
+
 	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/proto"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
+	"pingcc/app/collector"
+	"pingcc/app/controller"
 	"pingcc/entry"
 	"pingcc/log"
 	"pingcc/pb"
-	"pingcc/service/collector"
-	"pingcc/service/controller"
 )
 
 func run() error {
@@ -31,21 +31,20 @@ func run() error {
 
 	// init db connect
 	dsn := viper.GetString("database.dsn")
-	dbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: log.NewGorm(log.L())})
-	if err != nil {
+	if err := infra.InitDB(dsn, log.NewGorm(log.L())); err != nil {
 		return err
 	}
 	log.L().Info("Init db connect success")
 
 	// init db table
-	if err := entry.InitTables(dbConn); err != nil {
+	if err := entry.InitTables(infra.DB()); err != nil {
 		return err
 	}
 	log.L().Info("Init db tables success")
 
-	agentRepo := entry.NewAgentRepo(dbConn)
+	repo := entry.NewRepo(infra.DB())
 
-	ctrl := controller.New(agentRepo)
+	ctrl := controller.New(repo)
 	coll := collector.New()
 	collS := grpc.NewServer()
 	ctrlS := grpc.NewServer()
@@ -61,12 +60,12 @@ func run() error {
 
 	errCh := make(chan error)
 	go func() {
-		log.L().Info("Start collector service")
+		log.L().Info("Start collector app")
 		err := collS.Serve(lis)
 		errCh <- err
 	}()
 	go func() {
-		log.L().Info("Start controller service")
+		log.L().Info("Start controller app")
 		err := ctrlS.Serve(lis)
 		errCh <- err
 	}()

@@ -2,8 +2,9 @@ package controller
 
 import (
 	"context"
-	"pingcc/entry"
 	"sync"
+
+	"pingcc/entry"
 
 	"pingcc/pb"
 )
@@ -11,14 +12,14 @@ import (
 type impl struct {
 	pb.UnimplementedControllerServer
 
-	repo      entry.AgentRepo
+	repo      entry.Repo
 	chL       sync.RWMutex
 	agentIDCh map[uint]chan *pb.UpdateCommandResp
 }
 
-func New(agentRepo entry.AgentRepo) pb.ControllerServer {
+func New(repo entry.Repo) pb.ControllerServer {
 	i := impl{
-		repo:      agentRepo,
+		repo:      repo,
 		agentIDCh: make(map[uint]chan *pb.UpdateCommandResp),
 	}
 
@@ -26,7 +27,7 @@ func New(agentRepo entry.AgentRepo) pb.ControllerServer {
 }
 
 func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
-	agent, err := i.repo.FindPreloadPingCommand(int(req.AgentID))
+	agent, err := i.repo.AgentRepo.Find(context.Background(), uint(req.AgentID))
 	if err != nil {
 		return err
 	}
@@ -76,13 +77,17 @@ func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.T
 }
 
 func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
-	agent, err := i.repo.FindPreloadPingCommand(int(req.AgentID))
+	agent, err := i.repo.AgentRepo.Find(ctx, uint(req.AgentID))
+	if err != nil {
+		return nil, err
+	}
+	targets, err := agent.PingTargets(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	comms := make([]*pb.GrpcPingCommand, 0, len(agent.PingTargets))
-	for _, target := range agent.PingTargets {
+	comms := make([]*pb.GrpcPingCommand, 0, len(targets))
+	for _, target := range targets {
 		comm := &pb.GrpcPingCommand{
 			IP:         target.IP,
 			TimeoutMS:  target.TimeoutMS,

@@ -10,56 +10,51 @@ import (
 )
 
 type GormLogger struct {
-	logger *zap.Logger
-	lvl    *zap.AtomicLevel
-}
-
-type Logger struct {
 	logger        *zap.Logger
 	lvl           logger.LogLevel
 	slowThreshold time.Duration
 }
 
-func NewGorm(l *zap.Logger) *Logger {
+func NewGorm(l *zap.Logger) *GormLogger {
 	l = l.With(zap.String("service", "gorm")).WithOptions(zap.AddCallerSkip(1))
-	return &Logger{
+	return &GormLogger{
 		logger:        l,
 		lvl:           logger.Warn,
 		slowThreshold: 100 * time.Millisecond,
 	}
 }
 
-func (l *Logger) LogMode(lvl logger.LogLevel) logger.Interface {
-	return &Logger{
+func (l *GormLogger) LogMode(lvl logger.LogLevel) logger.Interface {
+	return &GormLogger{
 		logger:        l.logger,
 		slowThreshold: l.slowThreshold,
 		lvl:           lvl,
 	}
 }
 
-func (l *Logger) Info(_ context.Context, str string, args ...interface{}) {
-	if l.lvl < logger.Info {
+func (l *GormLogger) Info(_ context.Context, str string, args ...interface{}) {
+	if l.lvl >= logger.Info {
 		return
 	}
 	l.logger.Sugar().Debugf(str, args...)
 }
 
-func (l Logger) Warn(_ context.Context, str string, args ...interface{}) {
-	if l.lvl < logger.Warn {
+func (l *GormLogger) Warn(_ context.Context, str string, args ...interface{}) {
+	if l.lvl >= logger.Warn {
 		return
 	}
 	l.logger.Sugar().Warnf(str, args...)
 }
 
-func (l Logger) Error(_ context.Context, str string, args ...interface{}) {
-	if l.lvl < logger.Error {
+func (l *GormLogger) Error(_ context.Context, str string, args ...interface{}) {
+	if l.lvl >= logger.Error {
 		return
 	}
 	l.logger.Sugar().Errorf(str, args...)
 }
 
-func (l Logger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
-	if l.lvl <= 0 {
+func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
+	if l.lvl <= logger.Silent {
 		return
 	}
 
