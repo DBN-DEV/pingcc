@@ -64,13 +64,13 @@ func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (string
 		// Propagated errors are not logged so as not to appear multiple times and be confusing
 	case l.slowThreshold != 0 && elapsed > l.slowThreshold && l.lvl >= logger.Warn:
 		sql, rows := fc()
-		msg := fmt.Sprintf("slow query > %v", l.slowThreshold)
+		msg := fmt.Sprintf("Slow query > %v", l.slowThreshold)
 		// While the message is "warning" that a query was running for a long period of time,
 		// it is not clearly actionable and does not indicate that the server will fail in the near future.
 		// This should be logged at the info level instead.
 		l.logger.Info(msg, zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
 	case l.lvl >= logger.Info:
 		sql, rows := fc()
-		l.logger.Debug("query", zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
+		l.logger.Debug("SQL query", zap.Duration("elapsed", elapsed), zap.Int64("rows", rows), zap.String("sql", sql))
 	}
 }
