@@ -2,9 +2,11 @@ package controller
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"pingcc/log"
 	"sync"
 
-	"pingcc/entry"
+	"pingcc/domain"
 
 	"pingcc/pb"
 )
@@ -12,14 +14,14 @@ import (
 type impl struct {
 	pb.UnimplementedControllerServer
 
-	repo      entry.Repo
+	agentRepo domain.AgentRepo
 	chL       sync.RWMutex
 	agentIDCh map[uint]chan *pb.UpdateCommandResp
 }
 
-func New(repo entry.Repo) pb.ControllerServer {
+func New(repo domain.AgentRepo) *impl {
 	i := impl{
-		repo:      repo,
+		agentRepo: repo,
 		agentIDCh: make(map[uint]chan *pb.UpdateCommandResp),
 	}
 
@@ -27,7 +29,7 @@ func New(repo entry.Repo) pb.ControllerServer {
 }
 
 func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
-	agent, err := i.repo.AgentRepo.Find(context.Background(), uint(req.AgentID))
+	agent, err := i.agentRepo.FindWithPingTargets(context.Background(), uint(req.AgentID))
 	if err != nil {
 		return err
 	}
@@ -42,7 +44,7 @@ func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer
 }
 
 //　sendInitCommand 给 agent 发送初始化指令
-func (i *impl) sendInitCommand(agent *entry.Agent, server pb.Controller_RegisterServer) error {
+func (i *impl) sendInitCommand(agent *domain.Agent, server pb.Controller_RegisterServer) error {
 	resps := []*pb.UpdateCommandResp{{
 		CommandType: pb.CommandType_Ping,
 		Version:     agent.ControllerPingCommandVersion,
@@ -61,7 +63,7 @@ func (i *impl) sendInitCommand(agent *entry.Agent, server pb.Controller_Register
 }
 
 // initCh 给注册的 agent 初始化 ch
-func (i *impl) initCH(agent *entry.Agent) {
+func (i *impl) initCH(agent *domain.Agent) {
 	i.chL.Lock()
 	defer i.chL.Unlock()
 
@@ -73,21 +75,43 @@ func (i *impl) initCH(agent *entry.Agent) {
 }
 
 func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {
-	return nil, nil
+	agent, err := i.agentRepo.FindWithTcpPingTargets(ctx, uint(req.AgentID))
+	if err != nil {
+		return nil, err
+	}
+	agent.ActivateByGetTcpPingComm(req.Version)
+	if err := i.agentRepo.Save(ctx, agent); err != nil {
+		log.L().Info("Fail to save agent", zap.Error(err))
+	}
+
+	comms := make([]*pb.GrpcTcpPingCommand, 0, len(agent.TcpPingTargets))
+	for _, target := range agent.TcpPingTargets {
+		comm := &pb.GrpcTcpPingCommand{
+			Target:     target.Address,
+			TimeoutMS:  target.TimeoutMS,
+			IntervalMS: target.IntervalMS,
+		}
+		comms = append(comms, comm)
+	}
+
+	return &pb.TcpPingCommandResp{
+		Version:         agent.ControllerTcpPingCommandVersion,
+		TcpPingCommands: comms,
+	}, nil
 }
 
 func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
-	agent, err := i.repo.AgentRepo.Find(ctx, uint(req.AgentID))
+	agent, err := i.agentRepo.FindWithPingTargets(ctx, uint(req.AgentID))
 	if err != nil {
 		return nil, err
 	}
-	targets, err := agent.PingTargets(ctx)
-	if err != nil {
-		return nil, err
+	agent.ActivateByGetPingComm(req.Version)
+	if err := i.agentRepo.Save(ctx, agent); err != nil {
+		log.L().Info("Fail to save agent", zap.Error(err))
 	}
 
-	comms := make([]*pb.GrpcPingCommand, 0, len(targets))
-	for _, target := range targets {
+	comms := make([]*pb.GrpcPingCommand, 0, len(agent.PingTargets))
+	for _, target := range agent.PingTargets {
 		comm := &pb.GrpcPingCommand{
 			IP:         target.IP,
 			TimeoutMS:  target.TimeoutMS,

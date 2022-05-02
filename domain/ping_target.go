@@ -1,4 +1,4 @@
-package entry
+package domain
 
 import (
 	"time"
@@ -7,8 +7,6 @@ import (
 )
 
 type PingTarget struct {
-	db *gorm.DB
-
 	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -31,6 +29,7 @@ type PingTarget struct {
 	ISP string
 
 	AgentID uint
+	Agent   Agent
 }
 
 type PingTargetRepo interface {

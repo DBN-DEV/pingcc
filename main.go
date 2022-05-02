@@ -12,7 +12,7 @@ import (
 
 	"pingcc/app/collector"
 	"pingcc/app/controller"
-	"pingcc/entry"
+	"pingcc/domain"
 	"pingcc/infra"
 	"pingcc/log"
 	"pingcc/pb"
@@ -36,14 +36,14 @@ func run() error {
 	log.L().Info("Init db connect success")
 
 	// init db table
-	if err := entry.InitTables(infra.DB()); err != nil {
+	if err := domain.InitTables(infra.DB()); err != nil {
 		return err
 	}
 	log.L().Info("Init db tables success")
 
-	repo := entry.NewRepo(infra.DB())
+	agentRepo := &domain.AgentRepoImpl{DB: infra.DB()}
 
-	ctrl := controller.New(repo)
+	ctrl := controller.New(agentRepo)
 	coll := collector.New()
 	collS := grpc.NewServer()
 	ctrlS := grpc.NewServer()

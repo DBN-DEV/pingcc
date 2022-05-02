@@ -1,4 +1,4 @@
-package entry
+package domain
 
 import (
 	"time"
@@ -14,7 +14,7 @@ type TcpPingTarget struct {
 	UpdatedAt time.Time
 
 	// 被探测的地址 可以是域名，要带端口号
-	Address string `gorm:"index:,type:hash"`
+	Address string `gorm:"index"`
 	// 超时时间 单位毫秒
 	TimeoutMS uint32
 	// 间隔时间 单位毫秒
@@ -24,4 +24,5 @@ type TcpPingTarget struct {
 	Region string
 
 	AgentID uint
+	Agent   Agent
 }

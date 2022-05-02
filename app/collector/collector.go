@@ -10,7 +10,7 @@ type impl struct {
 	pb.UnimplementedCollectorServer
 }
 
-func New() pb.CollectorServer {
+func New() *impl {
 	return &impl{}
 }
 
