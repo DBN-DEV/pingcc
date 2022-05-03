@@ -38,7 +38,13 @@ func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer
 		return err
 	}
 
-	i.initCH(agent)
+	ch := i.initCH(agent)
+
+	for resp := range ch {
+		if err := server.Send(resp); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -63,7 +69,7 @@ func (i *impl) sendInitCommand(agent *domain.Agent, server pb.Controller_Registe
 }
 
 // initCh 给注册的 agent 初始化 ch
-func (i *impl) initCH(agent *domain.Agent) {
+func (i *impl) initCH(agent *domain.Agent) chan *pb.UpdateCommandResp {
 	i.chL.Lock()
 	defer i.chL.Unlock()
 
@@ -71,7 +77,10 @@ func (i *impl) initCH(agent *domain.Agent) {
 		close(ch)
 		delete(i.agentIDCh, agent.ID)
 	}
-	i.agentIDCh[agent.ID] = make(chan *pb.UpdateCommandResp)
+
+	ch := make(chan *pb.UpdateCommandResp)
+	i.agentIDCh[agent.ID] = ch
+	return ch
 }
 
 func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {

@@ -45,10 +45,9 @@ func run() error {
 
 	ctrl := controller.New(agentRepo)
 	coll := collector.New()
-	collS := grpc.NewServer()
-	ctrlS := grpc.NewServer()
-	pb.RegisterControllerServer(ctrlS, ctrl)
-	pb.RegisterCollectorServer(collS, coll)
+	gsrv := grpc.NewServer()
+	pb.RegisterControllerServer(gsrv, ctrl)
+	pb.RegisterCollectorServer(gsrv, coll)
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)
@@ -56,19 +55,8 @@ func run() error {
 		return err
 	}
 	log.L().Info("Create listener success", zap.String("addr", addr))
-
-	errCh := make(chan error)
-	go func() {
-		log.L().Info("Start collector app")
-		err := collS.Serve(lis)
-		errCh <- err
-	}()
-	go func() {
-		log.L().Info("Start controller app")
-		err := ctrlS.Serve(lis)
-		errCh <- err
-	}()
-	if err := <-errCh; err != nil {
+	log.L().Info("Start app")
+	if err := gsrv.Serve(lis); err != nil {
 		return err
 	}
 
