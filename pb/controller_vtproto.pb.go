@@ -175,22 +175,87 @@ func (m *GrpcPingCommand) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.DSCP != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.DSCP))
+		i--
+		dAtA[i] = 0x28
+	}
 	if m.IntervalMS != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.IntervalMS))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 	}
 	if m.TimeoutMS != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.TimeoutMS))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x18
 	}
 	if len(m.IP) > 0 {
 		i -= len(m.IP)
 		copy(dAtA[i:], m.IP)
 		i = encodeVarint(dAtA, i, uint64(len(m.IP)))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x12
+	}
+	if m.ID != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GrpcFpingCommand) MarshalVT() (dAtA []byte, err error) {
+	if m == nil {
+		return nil, nil
+	}
+	size := m.SizeVT()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GrpcFpingCommand) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *GrpcFpingCommand) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	if m == nil {
+		return 0, nil
+	}
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.unknownFields != nil {
+		i -= len(m.unknownFields)
+		copy(dAtA[i:], m.unknownFields)
+	}
+	if m.DSCP != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.DSCP))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.TimeoutMS != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.TimeoutMS))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.IP) > 0 {
+		i -= len(m.IP)
+		copy(dAtA[i:], m.IP)
+		i = encodeVarint(dAtA, i, uint64(len(m.IP)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ID != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -280,19 +345,24 @@ func (m *GrpcTcpPingCommand) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.IntervalMS != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.IntervalMS))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 	}
 	if m.TimeoutMS != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.TimeoutMS))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x18
 	}
 	if len(m.Target) > 0 {
 		i -= len(m.Target)
 		copy(dAtA[i:], m.Target)
 		i = encodeVarint(dAtA, i, uint64(len(m.Target)))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x12
+	}
+	if m.ID != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.ID))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -379,16 +449,14 @@ func (m *FpingCommandResp) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.TimeoutMS != 0 {
-		i = encodeVarint(dAtA, i, uint64(m.TimeoutMS))
-		i--
-		dAtA[i] = 0x18
-	}
-	if len(m.IPAddrs) > 0 {
-		for iNdEx := len(m.IPAddrs) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.IPAddrs[iNdEx])
-			copy(dAtA[i:], m.IPAddrs[iNdEx])
-			i = encodeVarint(dAtA, i, uint64(len(m.IPAddrs[iNdEx])))
+	if len(m.FpingCommands) > 0 {
+		for iNdEx := len(m.FpingCommands) - 1; iNdEx >= 0; iNdEx-- {
+			size, err := m.FpingCommands[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarint(dAtA, i, uint64(size))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -524,6 +592,9 @@ func (m *GrpcPingCommand) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
+	if m.ID != 0 {
+		n += 1 + sov(uint64(m.ID))
+	}
 	l = len(m.IP)
 	if l > 0 {
 		n += 1 + l + sov(uint64(l))
@@ -533,6 +604,34 @@ func (m *GrpcPingCommand) SizeVT() (n int) {
 	}
 	if m.IntervalMS != 0 {
 		n += 1 + sov(uint64(m.IntervalMS))
+	}
+	if m.DSCP != 0 {
+		n += 1 + sov(uint64(m.DSCP))
+	}
+	if m.unknownFields != nil {
+		n += len(m.unknownFields)
+	}
+	return n
+}
+
+func (m *GrpcFpingCommand) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ID != 0 {
+		n += 1 + sov(uint64(m.ID))
+	}
+	l = len(m.IP)
+	if l > 0 {
+		n += 1 + l + sov(uint64(l))
+	}
+	if m.TimeoutMS != 0 {
+		n += 1 + sov(uint64(m.TimeoutMS))
+	}
+	if m.DSCP != 0 {
+		n += 1 + sov(uint64(m.DSCP))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -568,6 +667,9 @@ func (m *GrpcTcpPingCommand) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
+	if m.ID != 0 {
+		n += 1 + sov(uint64(m.ID))
+	}
 	l = len(m.Target)
 	if l > 0 {
 		n += 1 + l + sov(uint64(l))
@@ -616,14 +718,11 @@ func (m *FpingCommandResp) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + sov(uint64(l))
 	}
-	if len(m.IPAddrs) > 0 {
-		for _, s := range m.IPAddrs {
-			l = len(s)
+	if len(m.FpingCommands) > 0 {
+		for _, e := range m.FpingCommands {
+			l = e.SizeVT()
 			n += 1 + l + sov(uint64(l))
 		}
-	}
-	if m.TimeoutMS != 0 {
-		n += 1 + sov(uint64(m.TimeoutMS))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -964,6 +1063,25 @@ func (m *GrpcPingCommand) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IP", wireType)
 			}
@@ -995,7 +1113,7 @@ func (m *GrpcPingCommand) UnmarshalVT(dAtA []byte) error {
 			}
 			m.IP = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMS", wireType)
 			}
@@ -1014,7 +1132,7 @@ func (m *GrpcPingCommand) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IntervalMS", wireType)
 			}
@@ -1029,6 +1147,165 @@ func (m *GrpcPingCommand) UnmarshalVT(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.IntervalMS |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DSCP", wireType)
+			}
+			m.DSCP = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DSCP |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skip(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLength
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GrpcFpingCommand) UnmarshalVT(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflow
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GrpcFpingCommand: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GrpcFpingCommand: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IP", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IP = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMS", wireType)
+			}
+			m.TimeoutMS = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TimeoutMS |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DSCP", wireType)
+			}
+			m.DSCP = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DSCP |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1202,6 +1479,25 @@ func (m *GrpcTcpPingCommand) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			m.ID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Target", wireType)
 			}
@@ -1233,7 +1529,7 @@ func (m *GrpcTcpPingCommand) UnmarshalVT(dAtA []byte) error {
 			}
 			m.Target = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMS", wireType)
 			}
@@ -1252,7 +1548,7 @@ func (m *GrpcTcpPingCommand) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IntervalMS", wireType)
 			}
@@ -1473,9 +1769,9 @@ func (m *FpingCommandResp) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IPAddrs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FpingCommands", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -1485,43 +1781,26 @@ func (m *FpingCommandResp) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLength
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLength
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.IPAddrs = append(m.IPAddrs, string(dAtA[iNdEx:postIndex]))
+			m.FpingCommands = append(m.FpingCommands, &GrpcFpingCommand{})
+			if err := m.FpingCommands[len(m.FpingCommands)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TimeoutMS", wireType)
-			}
-			m.TimeoutMS = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TimeoutMS |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])

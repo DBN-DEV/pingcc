@@ -43,11 +43,9 @@ func run() error {
 
 	agentRepo := &domain.AgentRepoImpl{DB: infra.DB()}
 
-	ctrl := controller.New(agentRepo)
-	coll := collector.New()
 	gsrv := grpc.NewServer()
-	pb.RegisterControllerServer(gsrv, ctrl)
-	pb.RegisterCollectorServer(gsrv, coll)
+	pb.RegisterControllerServer(gsrv, controller.New(agentRepo))
+	pb.RegisterCollectorServer(gsrv, collector.New())
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)

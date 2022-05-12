@@ -1,4 +1,4 @@
-all: build
+all: gen-pb build
 
 build:
 	go build -o pingcc main.go

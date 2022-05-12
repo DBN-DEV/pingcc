@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"context"
+	"github.com/dgraph-io/ristretto"
 	"time"
 
 	"gorm.io/gorm"
@@ -33,8 +35,11 @@ type PingTarget struct {
 }
 
 type PingTargetRepo interface {
+	Find(ctx context.Context, id uint)
 }
 
 type PingTargetRepoImpl struct {
 	DB *gorm.DB
+
+	cache *ristretto.Cache
 }

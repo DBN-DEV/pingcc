@@ -81,8 +81,8 @@ func (m *GrpcPingResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.UTCSendAt != 0 {
-		i = encodeVarint(dAtA, i, uint64(m.UTCSendAt))
+	if m.SendAt != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.SendAt))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -101,12 +101,10 @@ func (m *GrpcPingResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	if len(m.IP) > 0 {
-		i -= len(m.IP)
-		copy(dAtA[i:], m.IP)
-		i = encodeVarint(dAtA, i, uint64(len(m.IP)))
+	if m.ID != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.ID))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -191,8 +189,8 @@ func (m *GrpcTcpPingResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if m.UTCSendAt != 0 {
-		i = encodeVarint(dAtA, i, uint64(m.UTCSendAt))
+	if m.SendAt != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.SendAt))
 		i--
 		dAtA[i] = 0x20
 	}
@@ -211,12 +209,10 @@ func (m *GrpcTcpPingResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	if len(m.Target) > 0 {
-		i -= len(m.Target)
-		copy(dAtA[i:], m.Target)
-		i = encodeVarint(dAtA, i, uint64(len(m.Target)))
+	if m.ID != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.ID))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -314,12 +310,10 @@ func (m *GrpcFPingResult) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	if len(m.IP) > 0 {
-		i -= len(m.IP)
-		copy(dAtA[i:], m.IP)
-		i = encodeVarint(dAtA, i, uint64(len(m.IP)))
+	if m.ID != 0 {
+		i = encodeVarint(dAtA, i, uint64(m.ID))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -353,13 +347,6 @@ func (m *FPingReportReq) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m.unknownFields != nil {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
-	}
-	if len(m.Version) > 0 {
-		i -= len(m.Version)
-		copy(dAtA[i:], m.Version)
-		i = encodeVarint(dAtA, i, uint64(len(m.Version)))
-		i--
-		dAtA[i] = 0x1a
 	}
 	if m.AgentID != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.AgentID))
@@ -471,13 +458,6 @@ func (m *MTRReportReq) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if len(m.Version) > 0 {
-		i -= len(m.Version)
-		copy(dAtA[i:], m.Version)
-		i = encodeVarint(dAtA, i, uint64(len(m.Version)))
-		i--
-		dAtA[i] = 0x1a
-	}
 	if m.AgentID != 0 {
 		i = encodeVarint(dAtA, i, uint64(m.AgentID))
 		i--
@@ -527,9 +507,8 @@ func (m *GrpcPingResult) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.IP)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
+	if m.ID != 0 {
+		n += 1 + sov(uint64(m.ID))
 	}
 	if m.IsTimeout {
 		n += 2
@@ -537,8 +516,8 @@ func (m *GrpcPingResult) SizeVT() (n int) {
 	if m.RttMicros != 0 {
 		n += 1 + sov(uint64(m.RttMicros))
 	}
-	if m.UTCSendAt != 0 {
-		n += 1 + sov(uint64(m.UTCSendAt))
+	if m.SendAt != 0 {
+		n += 1 + sov(uint64(m.SendAt))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -573,9 +552,8 @@ func (m *GrpcTcpPingResult) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Target)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
+	if m.ID != 0 {
+		n += 1 + sov(uint64(m.ID))
 	}
 	if m.IsTimeout {
 		n += 2
@@ -583,8 +561,8 @@ func (m *GrpcTcpPingResult) SizeVT() (n int) {
 	if m.RttMicros != 0 {
 		n += 1 + sov(uint64(m.RttMicros))
 	}
-	if m.UTCSendAt != 0 {
-		n += 1 + sov(uint64(m.UTCSendAt))
+	if m.SendAt != 0 {
+		n += 1 + sov(uint64(m.SendAt))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -617,9 +595,8 @@ func (m *GrpcFPingResult) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.IP)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
+	if m.ID != 0 {
+		n += 1 + sov(uint64(m.ID))
 	}
 	if m.IsTimeout {
 		n += 2
@@ -647,10 +624,6 @@ func (m *FPingReportReq) SizeVT() (n int) {
 	}
 	if m.AgentID != 0 {
 		n += 1 + sov(uint64(m.AgentID))
-	}
-	l = len(m.Version)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -697,10 +670,6 @@ func (m *MTRReportReq) SizeVT() (n int) {
 	}
 	if m.AgentID != 0 {
 		n += 1 + sov(uint64(m.AgentID))
-	}
-	l = len(m.Version)
-	if l > 0 {
-		n += 1 + l + sov(uint64(l))
 	}
 	if m.unknownFields != nil {
 		n += len(m.unknownFields)
@@ -795,10 +764,10 @@ func (m *GrpcPingResult) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IP", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			var stringLen uint64
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -808,24 +777,11 @@ func (m *GrpcPingResult) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IP = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsTimeout", wireType)
@@ -867,9 +823,9 @@ func (m *GrpcPingResult) UnmarshalVT(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UTCSendAt", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SendAt", wireType)
 			}
-			m.UTCSendAt = 0
+			m.SendAt = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -879,7 +835,7 @@ func (m *GrpcPingResult) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UTCSendAt |= int64(b&0x7F) << shift
+				m.SendAt |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1040,10 +996,10 @@ func (m *GrpcTcpPingResult) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Target", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			var stringLen uint64
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -1053,24 +1009,11 @@ func (m *GrpcTcpPingResult) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Target = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsTimeout", wireType)
@@ -1112,9 +1055,9 @@ func (m *GrpcTcpPingResult) UnmarshalVT(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UTCSendAt", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SendAt", wireType)
 			}
-			m.UTCSendAt = 0
+			m.SendAt = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -1124,7 +1067,7 @@ func (m *GrpcTcpPingResult) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.UTCSendAt |= int64(b&0x7F) << shift
+				m.SendAt |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1287,10 +1230,10 @@ func (m *GrpcFPingResult) UnmarshalVT(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IP", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
 			}
-			var stringLen uint64
+			m.ID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflow
@@ -1300,24 +1243,11 @@ func (m *GrpcFPingResult) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.ID |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.IP = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field IsTimeout", wireType)
@@ -1461,38 +1391,6 @@ func (m *FPingReportReq) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Version = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])
@@ -1738,38 +1636,6 @@ func (m *MTRReportReq) UnmarshalVT(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLength
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLength
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Version = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])

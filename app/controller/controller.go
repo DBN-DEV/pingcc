@@ -96,6 +96,7 @@ func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.T
 	comms := make([]*pb.GrpcTcpPingCommand, 0, len(agent.TcpPingTargets))
 	for _, target := range agent.TcpPingTargets {
 		comm := &pb.GrpcTcpPingCommand{
+			ID:         uint64(target.ID),
 			Target:     target.Address,
 			TimeoutMS:  target.TimeoutMS,
 			IntervalMS: target.IntervalMS,
@@ -122,6 +123,7 @@ func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.Ping
 	comms := make([]*pb.GrpcPingCommand, 0, len(agent.PingTargets))
 	for _, target := range agent.PingTargets {
 		comm := &pb.GrpcPingCommand{
+			ID:         uint64(target.ID),
 			IP:         target.IP,
 			TimeoutMS:  target.TimeoutMS,
 			IntervalMS: target.IntervalMS,
