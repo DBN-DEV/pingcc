@@ -7,7 +7,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.3.0
 	github.com/spf13/viper v1.11.0
 	go.uber.org/zap v1.21.0
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
 	gorm.io/driver/postgres v1.3.5
 	gorm.io/gorm v1.23.5
