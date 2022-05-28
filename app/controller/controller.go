@@ -2,12 +2,12 @@ package controller
 
 import (
 	"context"
-	"go.uber.org/zap"
-	"pingcc/log"
 	"sync"
 
-	"pingcc/domain"
+	"go.uber.org/zap"
 
+	"pingcc/domain"
+	"pingcc/log"
 	"pingcc/pb"
 )
 
@@ -16,13 +16,13 @@ type impl struct {
 
 	agentRepo domain.AgentRepo
 	chL       sync.RWMutex
-	agentIDCh map[uint]chan *pb.UpdateCommandResp
+	agentIDCh map[uint64]chan *pb.UpdateCommandResp
 }
 
 func New(repo domain.AgentRepo) *impl {
 	i := impl{
 		agentRepo: repo,
-		agentIDCh: make(map[uint]chan *pb.UpdateCommandResp),
+		agentIDCh: make(map[uint64]chan *pb.UpdateCommandResp),
 	}
 
 	return &i

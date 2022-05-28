@@ -2,6 +2,9 @@ package main
 
 import (
 	"net"
+	"time"
+
+	"github.com/hhyhhy/tsdb"
 
 	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
 	"github.com/spf13/viper"
@@ -35,17 +38,14 @@ func run() error {
 	}
 	log.L().Info("Init db connect success")
 
-	// init db table
-	if err := domain.InitTables(infra.DB()); err != nil {
-		return err
-	}
-	log.L().Info("Init db tables success")
+	agentRepo := domain.NewAgentRepo(infra.DB())
+	pingRepo := domain.NewPingTargetRepo(infra.DB())
 
-	agentRepo := &domain.AgentRepoImpl{DB: infra.DB()}
+	memTSDB := tsdb.New[collector.PingResult](5 * time.Minute)
 
 	gsrv := grpc.NewServer()
 	pb.RegisterControllerServer(gsrv, controller.New(agentRepo))
-	pb.RegisterCollectorServer(gsrv, collector.New())
+	pb.RegisterCollectorServer(gsrv, collector.New(memTSDB, pingRepo))
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)

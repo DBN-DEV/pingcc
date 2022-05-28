@@ -8,7 +8,7 @@ import (
 )
 
 type Agent struct {
-	ID        uint `gorm:"primarykey"`
+	ID        uint64 `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
@@ -46,13 +46,17 @@ type AgentRepo interface {
 	Save(ctx context.Context, a *Agent) error
 }
 
+func NewAgentRepo(db *gorm.DB) *AgentRepoImpl {
+	return &AgentRepoImpl{db: db}
+}
+
 type AgentRepoImpl struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 func (i *AgentRepoImpl) FindWithPingTargets(ctx context.Context, id uint) (*Agent, error) {
 	var a Agent
-	if err := i.DB.WithContext(ctx).Where("id = ?", id).Preload("PingTargets").First(&a).Error; err != nil {
+	if err := i.db.WithContext(ctx).Where("id = ?", id).Preload("PingTargets").First(&a).Error; err != nil {
 		return nil, err
 	}
 
@@ -61,7 +65,7 @@ func (i *AgentRepoImpl) FindWithPingTargets(ctx context.Context, id uint) (*Agen
 
 func (i *AgentRepoImpl) FindWithTcpPingTargets(ctx context.Context, id uint) (*Agent, error) {
 	var a Agent
-	if err := i.DB.WithContext(ctx).Where("id = ?", id).Preload("TcpPingTargets").First(&a).Error; err != nil {
+	if err := i.db.WithContext(ctx).Where("id = ?", id).Preload("TcpPingTargets").First(&a).Error; err != nil {
 		return nil, err
 	}
 
@@ -69,7 +73,7 @@ func (i *AgentRepoImpl) FindWithTcpPingTargets(ctx context.Context, id uint) (*A
 }
 
 func (i *AgentRepoImpl) Save(ctx context.Context, a *Agent) error {
-	if err := i.DB.WithContext(ctx).Save(a).Error; err != nil {
+	if err := i.db.WithContext(ctx).Save(a).Error; err != nil {
 		return err
 	}
 
