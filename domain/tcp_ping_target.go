@@ -2,13 +2,9 @@ package domain
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type TcpPingTarget struct {
-	db *gorm.DB
-
 	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
