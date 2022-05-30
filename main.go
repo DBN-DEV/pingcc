@@ -40,12 +40,13 @@ func run() error {
 
 	agentRepo := domain.NewAgentRepo(infra.DB())
 	pingRepo := domain.NewPingTargetRepo(infra.DB())
+	tcpRepo := domain.NewTcpPingTargetRepo(infra.DB())
 
 	memTSDB := tsdb.New[collector.PingResult](5 * time.Minute)
 
 	gsrv := grpc.NewServer()
 	pb.RegisterControllerServer(gsrv, controller.New(agentRepo))
-	pb.RegisterCollectorServer(gsrv, collector.New(memTSDB, pingRepo))
+	pb.RegisterCollectorServer(gsrv, collector.New(memTSDB, pingRepo, tcpRepo))
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)

@@ -2,7 +2,6 @@ package collector
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/hhyhhy/tsdb"
@@ -23,10 +22,11 @@ type impl struct {
 
 	tsdb     *tsdb.TSDB[PingResult]
 	pingRepo domain.PingTargetRepo
+	tcpRepo  domain.TcpPingTargetRepo
 }
 
-func New(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo) *impl {
-	return &impl{tsdb: tsdb, pingRepo: pingRepo}
+func New(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo, tcpRepo domain.TcpPingTargetRepo) *impl {
+	return &impl{tsdb: tsdb, pingRepo: pingRepo, tcpRepo: tcpRepo}
 }
 
 func (i *impl) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty, error) {
@@ -34,12 +34,11 @@ func (i *impl) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty
 	for _, r := range req.Results {
 		t, err := i.pingRepo.Find(ctx, r.ID)
 		if err != nil {
-			log.L().Info("Fail to find target", zap.Error(err), zap.Uint64("id", r.ID))
+			log.L().Info("Fail to find icmp target", zap.Error(err), zap.Uint64("id", r.ID))
 			continue
 		}
 
-		tag := tsdb.Tag{Key: "agent_id", Value: strconv.Itoa(int(req.AgentID))}
-		tags := append(t.Tags(), tag)
+		tags := t.Tags()
 		data := PingResult{
 			RttMicros: r.RttMicros,
 			IsTimeout: r.IsTimeout,
@@ -56,6 +55,27 @@ func (i *impl) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty
 }
 
 func (i *impl) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq) (*pb.Empty, error) {
+	points := make([]tsdb.Point[PingResult], 0, len(req.Results))
+	for _, r := range req.Results {
+		t, err := i.tcpRepo.Find(ctx, r.ID)
+		if err != nil {
+			log.L().Info("Fail to find tcp target", zap.Error(err), zap.Uint64("id", r.ID))
+			continue
+		}
+
+		tags := t.Tags()
+		data := PingResult{
+			RttMicros: r.RttMicros,
+			IsTimeout: r.IsTimeout,
+		}
+		p := tsdb.NewPoint[PingResult](tags, time.Unix(r.SendAt, 0), data)
+		points = append(points, p)
+	}
+
+	if err := i.tsdb.WritePoints(points); err != nil {
+		log.L().Info("Fail to write point", zap.Error(err))
+	}
+
 	return &pb.Empty{}, nil
 }
 

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/hhyhhy/tsdb"
@@ -38,6 +39,8 @@ type PingTarget struct {
 
 func (t *PingTarget) Tags() []tsdb.Tag {
 	return []tsdb.Tag{
+		{Key: "agent_id", Value: strconv.Itoa(int(t.AgentID))},
+		{Key: "measurement", Value: "icmp"},
 		{Key: "type", Value: t.Type},
 		{Key: "region", Value: t.Region},
 		{Key: "province", Value: t.Province},
@@ -45,8 +48,6 @@ func (t *PingTarget) Tags() []tsdb.Tag {
 		{Key: "ip", Value: t.IP},
 	}
 }
-
-const _defaultTTL = 30 * time.Minute
 
 type PingTargetRepo interface {
 	Find(ctx context.Context, id uint64) (*PingTarget, error)
@@ -76,7 +77,7 @@ func (i *PingTargetRepoImpl) Find(ctx context.Context, id uint64) (*PingTarget, 
 
 	var t PingTarget
 	if err := i.db.WithContext(ctx).Where("id = ?", id).First(&t).Error; err != nil {
-		return &PingTarget{}, err
+		return nil, err
 	}
 
 	i.cache.SetWithTTL(id, &t, 1, _defaultTTL)
