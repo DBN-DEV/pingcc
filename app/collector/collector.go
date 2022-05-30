@@ -30,7 +30,7 @@ func New(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo) *impl {
 }
 
 func (i *impl) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty, error) {
-	var points []tsdb.Point[PingResult]
+	points := make([]tsdb.Point[PingResult], 0, len(req.Results))
 	for _, r := range req.Results {
 		t, err := i.pingRepo.Find(ctx, r.ID)
 		if err != nil {
