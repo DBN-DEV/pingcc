@@ -2,6 +2,7 @@ package main
 
 import (
 	"net"
+	"pingcc/app"
 	"time"
 
 	"github.com/hhyhhy/tsdb"
@@ -13,8 +14,6 @@ import (
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/proto"
 
-	"pingcc/app/collector"
-	"pingcc/app/controller"
 	"pingcc/domain"
 	"pingcc/infra"
 	"pingcc/log"
@@ -42,11 +41,11 @@ func run() error {
 	pingRepo := domain.NewPingTargetRepo(infra.DB())
 	tcpRepo := domain.NewTcpPingTargetRepo(infra.DB())
 
-	memTSDB := tsdb.New[collector.PingResult](5 * time.Minute)
+	memTSDB := tsdb.New[app.PingResult](5 * time.Minute)
 
 	gsrv := grpc.NewServer()
-	pb.RegisterControllerServer(gsrv, controller.New(agentRepo))
-	pb.RegisterCollectorServer(gsrv, collector.New(memTSDB, pingRepo, tcpRepo))
+	pb.RegisterControllerServer(gsrv, app.NewController(agentRepo))
+	pb.RegisterCollectorServer(gsrv, app.NewCollector(memTSDB, pingRepo, tcpRepo))
 
 	addr := viper.GetString("server.addr")
 	lis, err := net.Listen("tcp", addr)

@@ -1,4 +1,4 @@
-package controller
+package app
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"pingcc/pb"
 )
 
-type impl struct {
+type Controller struct {
 	pb.UnimplementedControllerServer
 
 	agentRepo domain.AgentRepo
@@ -19,8 +19,8 @@ type impl struct {
 	agentIDCh map[uint64]chan *pb.UpdateCommandResp
 }
 
-func New(repo domain.AgentRepo) *impl {
-	i := impl{
+func NewController(repo domain.AgentRepo) *Controller {
+	i := Controller{
 		agentRepo: repo,
 		agentIDCh: make(map[uint64]chan *pb.UpdateCommandResp),
 	}
@@ -28,7 +28,7 @@ func New(repo domain.AgentRepo) *impl {
 	return &i
 }
 
-func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
+func (i *Controller) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
 	agent, err := i.agentRepo.FindWithPingTargets(context.Background(), uint(req.AgentID))
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (i *impl) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer
 }
 
 //　sendInitCommand 给 agent 发送初始化指令
-func (i *impl) sendInitCommand(agent *domain.Agent, server pb.Controller_RegisterServer) error {
+func (i *Controller) sendInitCommand(agent *domain.Agent, server pb.Controller_RegisterServer) error {
 	resps := []*pb.UpdateCommandResp{{
 		CommandType: pb.CommandType_Ping,
 		Version:     agent.ControllerPingCommandVersion,
@@ -69,7 +69,7 @@ func (i *impl) sendInitCommand(agent *domain.Agent, server pb.Controller_Registe
 }
 
 // initCh 给注册的 agent 初始化 ch
-func (i *impl) initCH(agent *domain.Agent) chan *pb.UpdateCommandResp {
+func (i *Controller) initCH(agent *domain.Agent) chan *pb.UpdateCommandResp {
 	i.chL.Lock()
 	defer i.chL.Unlock()
 
@@ -83,7 +83,7 @@ func (i *impl) initCH(agent *domain.Agent) chan *pb.UpdateCommandResp {
 	return ch
 }
 
-func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {
+func (i *Controller) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {
 	agent, err := i.agentRepo.FindWithTcpPingTargets(ctx, uint(req.AgentID))
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.T
 	comms := make([]*pb.GrpcTcpPingCommand, 0, len(agent.TcpPingTargets))
 	for _, target := range agent.TcpPingTargets {
 		comm := &pb.GrpcTcpPingCommand{
-			ID:         uint64(target.ID),
+			ID:         target.ID,
 			Target:     target.Address,
 			TimeoutMS:  target.TimeoutMS,
 			IntervalMS: target.IntervalMS,
@@ -110,7 +110,7 @@ func (i *impl) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.T
 	}, nil
 }
 
-func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
+func (i *Controller) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
 	agent, err := i.agentRepo.FindWithPingTargets(ctx, uint(req.AgentID))
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.Ping
 	comms := make([]*pb.GrpcPingCommand, 0, len(agent.PingTargets))
 	for _, target := range agent.PingTargets {
 		comm := &pb.GrpcPingCommand{
-			ID:         uint64(target.ID),
+			ID:         target.ID,
 			IP:         target.IP,
 			TimeoutMS:  target.TimeoutMS,
 			IntervalMS: target.IntervalMS,
@@ -137,10 +137,10 @@ func (i *impl) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.Ping
 	}, nil
 }
 
-func (i *impl) GetFpingCommand(ctx context.Context, req *pb.CommandReq) (*pb.FpingCommandResp, error) {
+func (i *Controller) GetFpingCommand(ctx context.Context, req *pb.CommandReq) (*pb.FpingCommandResp, error) {
 	return nil, nil
 }
 
-func (i *impl) GetMtrCommand(ctx context.Context, req *pb.CommandReq) (*pb.MtrCommandResp, error) {
+func (i *Controller) GetMtrCommand(ctx context.Context, req *pb.CommandReq) (*pb.MtrCommandResp, error) {
 	return nil, nil
 }

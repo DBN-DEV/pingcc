@@ -1,4 +1,4 @@
-package collector
+package app
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type PingResult struct {
 	IsTimeout bool
 }
 
-type impl struct {
+type Collector struct {
 	pb.UnimplementedCollectorServer
 
 	tsdb     *tsdb.TSDB[PingResult]
@@ -25,11 +25,11 @@ type impl struct {
 	tcpRepo  domain.TcpPingTargetRepo
 }
 
-func New(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo, tcpRepo domain.TcpPingTargetRepo) *impl {
-	return &impl{tsdb: tsdb, pingRepo: pingRepo, tcpRepo: tcpRepo}
+func NewCollector(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo, tcpRepo domain.TcpPingTargetRepo) *Collector {
+	return &Collector{tsdb: tsdb, pingRepo: pingRepo, tcpRepo: tcpRepo}
 }
 
-func (i *impl) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty, error) {
+func (i *Collector) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty, error) {
 	points := make([]tsdb.Point[PingResult], 0, len(req.Results))
 	for _, r := range req.Results {
 		t, err := i.pingRepo.Find(ctx, r.ID)
@@ -54,7 +54,7 @@ func (i *impl) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty
 	return &pb.Empty{}, nil
 }
 
-func (i *impl) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq) (*pb.Empty, error) {
+func (i *Collector) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq) (*pb.Empty, error) {
 	points := make([]tsdb.Point[PingResult], 0, len(req.Results))
 	for _, r := range req.Results {
 		t, err := i.tcpRepo.Find(ctx, r.ID)
@@ -79,6 +79,6 @@ func (i *impl) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq) (*pb
 	return &pb.Empty{}, nil
 }
 
-func (i *impl) FpingReport(ctx context.Context, req *pb.FPingReportReq) (*pb.Empty, error) {
+func (i *Collector) FpingReport(ctx context.Context, req *pb.FPingReportReq) (*pb.Empty, error) {
 	return &pb.Empty{}, nil
 }
