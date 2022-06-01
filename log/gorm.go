@@ -16,7 +16,7 @@ type GormLogger struct {
 }
 
 func NewGorm(l *zap.Logger) *GormLogger {
-	l = l.With(zap.String("service", "gorm")).WithOptions(zap.AddCallerSkip(3))
+	l = l.With(zap.String("Service", "gorm"))
 
 	return &GormLogger{
 		logger:        l,

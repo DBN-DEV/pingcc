@@ -11,7 +11,7 @@ enum CommandType {
 }
 
 message RegisterReq {
-  uint32 AgentID = 1;
+  uint64 AgentID = 1;
 }
 
 message UpdateCommandResp {
@@ -20,7 +20,7 @@ message UpdateCommandResp {
 }
 
 message CommandReq {
-  uint32 AgentID = 1;
+  uint64 AgentID = 1;
   string Version = 2;
 }
 

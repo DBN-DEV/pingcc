@@ -41,8 +41,8 @@ func (a *Agent) ActivateByGetTcpPingComm(commVer string) {
 }
 
 type AgentRepo interface {
-	FindWithPingTargets(ctx context.Context, id uint) (*Agent, error)
-	FindWithTcpPingTargets(ctx context.Context, id uint) (*Agent, error)
+	FindWithPingTargets(ctx context.Context, id uint64) (*Agent, error)
+	FindWithTcpPingTargets(ctx context.Context, id uint64) (*Agent, error)
 	Save(ctx context.Context, a *Agent) error
 }
 
@@ -54,7 +54,7 @@ type AgentRepoImpl struct {
 	db *gorm.DB
 }
 
-func (i *AgentRepoImpl) FindWithPingTargets(ctx context.Context, id uint) (*Agent, error) {
+func (i *AgentRepoImpl) FindWithPingTargets(ctx context.Context, id uint64) (*Agent, error) {
 	var a Agent
 	if err := i.db.WithContext(ctx).Where("id = ?", id).Preload("PingTargets").First(&a).Error; err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (i *AgentRepoImpl) FindWithPingTargets(ctx context.Context, id uint) (*Agen
 	return &a, nil
 }
 
-func (i *AgentRepoImpl) FindWithTcpPingTargets(ctx context.Context, id uint) (*Agent, error) {
+func (i *AgentRepoImpl) FindWithTcpPingTargets(ctx context.Context, id uint64) (*Agent, error) {
 	var a Agent
 	if err := i.db.WithContext(ctx).Where("id = ?", id).Preload("TcpPingTargets").First(&a).Error; err != nil {
 		return nil, err

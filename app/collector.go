@@ -23,10 +23,13 @@ type Collector struct {
 	tsdb     *tsdb.TSDB[PingResult]
 	pingRepo domain.PingTargetRepo
 	tcpRepo  domain.TcpPingTargetRepo
+
+	logger *zap.Logger
 }
 
 func NewCollector(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo, tcpRepo domain.TcpPingTargetRepo) *Collector {
-	return &Collector{tsdb: tsdb, pingRepo: pingRepo, tcpRepo: tcpRepo}
+	logger := log.LWithSvcName("collector")
+	return &Collector{tsdb: tsdb, pingRepo: pingRepo, tcpRepo: tcpRepo, logger: logger}
 }
 
 func (i *Collector) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty, error) {
@@ -34,7 +37,7 @@ func (i *Collector) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.
 	for _, r := range req.Results {
 		t, err := i.pingRepo.Find(ctx, r.ID)
 		if err != nil {
-			log.L().Info("Fail to find icmp target", zap.Error(err), zap.Uint64("id", r.ID))
+			i.logger.Info("Fail to find icmp target", zap.Error(err), zap.Uint64("id", r.ID))
 			continue
 		}
 
@@ -48,7 +51,7 @@ func (i *Collector) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.
 	}
 
 	if err := i.tsdb.WritePoints(points); err != nil {
-		log.L().Info("Fail to write point", zap.Error(err))
+		i.logger.Info("Fail to write ping point", zap.Error(err))
 	}
 
 	return &pb.Empty{}, nil
@@ -59,7 +62,7 @@ func (i *Collector) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq)
 	for _, r := range req.Results {
 		t, err := i.tcpRepo.Find(ctx, r.ID)
 		if err != nil {
-			log.L().Info("Fail to find tcp target", zap.Error(err), zap.Uint64("id", r.ID))
+			i.logger.Info("Fail to find tcp target", zap.Error(err), zap.Uint64("id", r.ID))
 			continue
 		}
 
@@ -73,7 +76,7 @@ func (i *Collector) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq)
 	}
 
 	if err := i.tsdb.WritePoints(points); err != nil {
-		log.L().Info("Fail to write point", zap.Error(err))
+		i.logger.Info("Fail to write tcp ping points", zap.Error(err))
 	}
 
 	return &pb.Empty{}, nil

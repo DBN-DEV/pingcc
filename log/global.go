@@ -26,6 +26,7 @@ func defaultLogger() atomic.Value {
 	}
 
 	cfg := zap.Config{
+		DisableCaller:    true,
 		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
 		Development:      true,
 		Encoding:         "console",
@@ -48,4 +49,8 @@ func L() *zap.Logger {
 
 func S() *zap.SugaredLogger {
 	return L().Sugar()
+}
+
+func LWithSvcName(name string) *zap.Logger {
+	return L().With(zap.String("Service", name))
 }

@@ -17,24 +17,29 @@ type Controller struct {
 	agentRepo domain.AgentRepo
 	chL       sync.RWMutex
 	agentIDCh map[uint64]chan *pb.UpdateCommandResp
+
+	logger *zap.Logger
 }
 
 func NewController(repo domain.AgentRepo) *Controller {
-	i := Controller{
+	i := &Controller{
 		agentRepo: repo,
 		agentIDCh: make(map[uint64]chan *pb.UpdateCommandResp),
+		logger:    log.LWithSvcName("controller"),
 	}
 
-	return &i
+	return i
 }
 
 func (i *Controller) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
-	agent, err := i.agentRepo.FindWithPingTargets(context.Background(), uint(req.AgentID))
+	agent, err := i.agentRepo.FindWithPingTargets(context.Background(), req.AgentID)
 	if err != nil {
+		i.logger.Info("Fail to find agent with ping targets", zap.Uint64("agent_id", req.AgentID))
 		return err
 	}
 
 	if err := i.sendInitCommand(agent, server); err != nil {
+		i.logger.Info("Fail to send init command", zap.Uint64("agent_id", req.AgentID), zap.Error(err))
 		return err
 	}
 
@@ -42,6 +47,7 @@ func (i *Controller) Register(req *pb.RegisterReq, server pb.Controller_Register
 
 	for resp := range ch {
 		if err := server.Send(resp); err != nil {
+			i.logger.Info("Fail to send command", zap.Uint64("agent_id", req.AgentID), zap.Error(err))
 			return err
 		}
 	}
@@ -61,6 +67,7 @@ func (i *Controller) sendInitCommand(agent *domain.Agent, server pb.Controller_R
 
 	for _, resp := range resps {
 		if err := server.Send(resp); err != nil {
+			i.logger.Info("Fail to send command", zap.Uint64("agent_id", agent.ID), zap.Error(err))
 			return err
 		}
 	}
@@ -84,13 +91,14 @@ func (i *Controller) initCH(agent *domain.Agent) chan *pb.UpdateCommandResp {
 }
 
 func (i *Controller) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.TcpPingCommandResp, error) {
-	agent, err := i.agentRepo.FindWithTcpPingTargets(ctx, uint(req.AgentID))
+	agent, err := i.agentRepo.FindWithTcpPingTargets(ctx, req.AgentID)
 	if err != nil {
+		i.logger.Info("Fail to find agent with tcp ping targets", zap.Uint64("agent_id", agent.ID), zap.Error(err))
 		return nil, err
 	}
 	agent.ActivateByGetTcpPingComm(req.Version)
 	if err := i.agentRepo.Save(ctx, agent); err != nil {
-		log.L().Info("Fail to save agent", zap.Error(err))
+		i.logger.Info("Fail to save agent", zap.Uint64("agent_id", agent.ID), zap.Error(err))
 	}
 
 	comms := make([]*pb.GrpcTcpPingCommand, 0, len(agent.TcpPingTargets))
@@ -111,13 +119,13 @@ func (i *Controller) GetTcpPingCommand(ctx context.Context, req *pb.CommandReq) 
 }
 
 func (i *Controller) GetPingCommand(ctx context.Context, req *pb.CommandReq) (*pb.PingCommandsResp, error) {
-	agent, err := i.agentRepo.FindWithPingTargets(ctx, uint(req.AgentID))
+	agent, err := i.agentRepo.FindWithPingTargets(ctx, req.AgentID)
 	if err != nil {
 		return nil, err
 	}
 	agent.ActivateByGetPingComm(req.Version)
 	if err := i.agentRepo.Save(ctx, agent); err != nil {
-		log.L().Info("Fail to save agent", zap.Error(err))
+		i.logger.Info("Fail to save agent", zap.Uint64("agent_id", agent.ID), zap.Error(err))
 	}
 
 	comms := make([]*pb.GrpcPingCommand, 0, len(agent.PingTargets))
