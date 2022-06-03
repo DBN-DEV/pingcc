@@ -32,11 +32,8 @@ func NewAggregator(agentRepo domain.AgentRepo, tsdb *tsdb.TSDB[PingResult], writ
 
 func (a *Aggregator) AggProc() {
 	ticker := time.NewTicker(_aggInterval)
-	for {
-		select {
-		case <-ticker.C:
-			go a.aggPingResult()
-		}
+	for range ticker.C {
+		go a.aggPingResult()
 	}
 }
 
@@ -73,7 +70,7 @@ func (a *Aggregator) aggSingeAgentPingResult(agent domain.Agent) {
 		// tsdb 会将带有 ip 的系列返回，这里进行聚合计算
 		avgRtt, avgLoss := calcAvg(values)
 
-		var influxdbTags map[string]string
+		influxdbTags := make(map[string]string)
 		for _, tag := range tags[:len(tags)-1] {
 			influxdbTags[tag.Key] = tag.Value
 		}
