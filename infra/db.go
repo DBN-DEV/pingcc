@@ -10,8 +10,6 @@ import (
 
 var _db atomic.Value
 
-type DBConnFunc func() *gorm.DB
-
 func InitDB(dsn string, logger logger.Interface) error {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger})
 	if err != nil {

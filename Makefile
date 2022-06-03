@@ -3,7 +3,7 @@ all: gen-pb build
 gen: install-gogrpc install-vtprotobuf gen-pb
 
 build:
-	go build -o pingcc main.go
+	go build -o bin/pingcc main.go
 
 gen-pb:
 	mkdir ./pb && protoc --go-grpc_out=./pb --go_out=./pb --go-vtproto_out=./pb --go-vtproto_opt=features=marshal+unmarshal+size ./proto/*.proto

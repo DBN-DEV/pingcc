@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hhyhhy/tsdb"
@@ -37,15 +38,40 @@ type PingTarget struct {
 	Agent   Agent
 }
 
-func (t *PingTarget) Tags() []tsdb.Tag {
+func (t PingTarget) Tags() []tsdb.Tag {
 	return []tsdb.Tag{
 		{Key: "agent_id", Value: strconv.Itoa(int(t.AgentID))},
-		{Key: "measurement", Value: "icmp"},
 		{Key: "type", Value: t.Type},
 		{Key: "region", Value: t.Region},
 		{Key: "province", Value: t.Province},
 		{Key: "isp", Value: t.ISP},
 		{Key: "ip", Value: t.IP},
+	}
+}
+
+func (t PingTarget) SeriesWithoutIP() string {
+	var b strings.Builder
+	b.WriteString("agent_id=")
+	b.WriteString(strconv.Itoa(int(t.AgentID)))
+	b.WriteString(";type=")
+	b.WriteString(t.Type)
+	b.WriteString(";region=")
+	b.WriteString(t.Region)
+	b.WriteString(";province=")
+	b.WriteString(t.Province)
+	b.WriteString(";isp=")
+	b.WriteString(t.ISP)
+
+	return b.String()
+}
+
+func (t PingTarget) TagsWithoutIP() []tsdb.Tag {
+	return []tsdb.Tag{
+		{Key: "agent_id", Value: strconv.Itoa(int(t.AgentID))},
+		{Key: "type", Value: t.Type},
+		{Key: "region", Value: t.Region},
+		{Key: "province", Value: t.Province},
+		{Key: "isp", Value: t.ISP},
 	}
 }
 

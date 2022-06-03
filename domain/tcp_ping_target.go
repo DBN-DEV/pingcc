@@ -2,11 +2,12 @@ package domain
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"github.com/hhyhhy/tsdb"
 	"github.com/outcaste-io/ristretto"
 	"gorm.io/gorm"
-	"strconv"
-	"time"
 )
 
 type TcpPingTarget struct {
@@ -31,7 +32,6 @@ type TcpPingTarget struct {
 func (t *TcpPingTarget) Tags() []tsdb.Tag {
 	return []tsdb.Tag{
 		{Key: "agent_id", Value: strconv.Itoa(int(t.AgentID))},
-		{Key: "measurement", Value: "tcp"},
 		{Key: "address", Value: t.Address},
 		{Key: "region", Value: t.Region},
 	}

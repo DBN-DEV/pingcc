@@ -43,6 +43,7 @@ func (a *Agent) ActivateByGetTcpPingComm(commVer string) {
 type AgentRepo interface {
 	FindWithPingTargets(ctx context.Context, id uint64) (*Agent, error)
 	FindWithTcpPingTargets(ctx context.Context, id uint64) (*Agent, error)
+	AllWithPingTargets(ctx context.Context) ([]Agent, error)
 	Save(ctx context.Context, a *Agent) error
 }
 
@@ -70,6 +71,15 @@ func (i *AgentRepoImpl) FindWithTcpPingTargets(ctx context.Context, id uint64) (
 	}
 
 	return &a, nil
+}
+
+func (i *AgentRepoImpl) AllWithPingTargets(ctx context.Context) ([]Agent, error) {
+	var as []Agent
+	if err := i.db.WithContext(ctx).Preload("PingTargets").Find(&as).Error; err != nil {
+		return nil, err
+	}
+
+	return as, nil
 }
 
 func (i *AgentRepoImpl) Save(ctx context.Context, a *Agent) error {

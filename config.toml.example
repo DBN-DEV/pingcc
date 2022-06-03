@@ -3,3 +3,9 @@ dsn="user=a password=b dbname=c host=127.0.0.1 port=5432 sslmode=disable TimeZon
 
 [server]
 addr=":5001"
+
+[influxdb]
+url=""
+token=""
+org=""
+bucket=""

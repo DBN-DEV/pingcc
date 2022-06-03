@@ -41,7 +41,7 @@ func (i *Collector) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.
 			continue
 		}
 
-		tags := t.Tags()
+		tags := append(t.Tags(), tsdb.Tag{Key: "measurement", Value: "icmp"})
 		data := PingResult{
 			RttMicros: r.RttMicros,
 			IsTimeout: r.IsTimeout,
@@ -66,7 +66,7 @@ func (i *Collector) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq)
 			continue
 		}
 
-		tags := t.Tags()
+		tags := append(t.Tags(), tsdb.Tag{Key: "measurement", Value: "tcp"})
 		data := PingResult{
 			RttMicros: r.RttMicros,
 			IsTimeout: r.IsTimeout,

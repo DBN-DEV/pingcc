@@ -1,9 +1,11 @@
 package main
 
 import (
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"net"
-	"pingcc/app"
 	"time"
+
+	"pingcc/app"
 
 	"github.com/hhyhhy/tsdb"
 
@@ -41,7 +43,15 @@ func run() error {
 	pingRepo := domain.NewPingTargetRepo(infra.DB())
 	tcpRepo := domain.NewTcpPingTargetRepo(infra.DB())
 
-	memTSDB := tsdb.New[app.PingResult](5 * time.Minute)
+	memTSDB := tsdb.New[app.PingResult](2 * time.Minute)
+
+	cli := influxdb2.NewClient(viper.GetString("influxdb.url"), viper.GetString("influxdb.token"))
+	writeAPI := cli.WriteAPI(viper.GetString("influxdb.org"), viper.GetString("influxdb.bucket"))
+
+	log.L().Info("Init Aggregator")
+	aggregator := app.NewAggregator(agentRepo, memTSDB, writeAPI)
+	go aggregator.AggProc()
+	log.L().Info("Init aggregator success")
 
 	gsrv := grpc.NewServer()
 	pb.RegisterControllerServer(gsrv, app.NewController(agentRepo))
