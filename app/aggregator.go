@@ -71,6 +71,7 @@ func (a *Aggregator) aggSingeAgentPingResult(agent domain.Agent) {
 		avgRtt, avgLoss := calcAvg(values)
 
 		influxdbTags := make(map[string]string)
+		// 在 influxdb 通过 measurement 来区分 icmp 和 tcp 所以这里要移除最后加入的 measurement tag
 		for _, tag := range tags[:len(tags)-1] {
 			influxdbTags[tag.Key] = tag.Value
 		}

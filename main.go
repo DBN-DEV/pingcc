@@ -1,14 +1,14 @@
 package main
 
 import (
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"context"
+	"errors"
 	"net"
 	"time"
 
-	"pingcc/app"
-
 	"github.com/hhyhhy/tsdb"
 
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	vtpb "github.com/planetscale/vtprotobuf/codec/grpc"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	_ "google.golang.org/grpc/encoding/proto"
 
+	"pingcc/app"
 	"pingcc/domain"
 	"pingcc/infra"
 	"pingcc/log"
@@ -45,7 +46,16 @@ func run() error {
 
 	memTSDB := tsdb.New[app.PingResult](2 * time.Minute)
 
+	log.L().Info("Init influxdb client")
 	cli := influxdb2.NewClient(viper.GetString("influxdb.url"), viper.GetString("influxdb.token"))
+	ok, err := cli.Ping(context.Background())
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return errors.New("ping influxdb not ok")
+	}
+
 	writeAPI := cli.WriteAPI(viper.GetString("influxdb.org"), viper.GetString("influxdb.bucket"))
 
 	log.L().Info("Init Aggregator")
