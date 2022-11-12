@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -31,6 +32,42 @@ func NewController(repo domain.AgentRepo) *Controller {
 	return i
 }
 
+func (i *Controller) checkUpdate() {
+	m := make(map[uint64]chan *pb.UpdateCommandResp)
+	i.chL.RLock()
+	for k, v := range m {
+		m[k] = v
+	}
+	i.chL.RUnlock()
+
+	for id, ch := range i.agentIDCh {
+		agent, err := i.agentRepo.Find(context.Background(), id)
+		if err != nil {
+			i.logger.Warn("Can not get agent, on watch process", zap.Error(err))
+			continue
+		}
+		if agent.AgentPingCommandVersion != agent.ControllerPingCommandVersion {
+			ch <- &pb.UpdateCommandResp{
+				CommandType: pb.CommandType_Ping,
+				Version:     agent.ControllerPingCommandVersion,
+			}
+		}
+		if agent.AgentTcpPingCommandVersion != agent.ControllerTcpPingCommandVersion {
+			ch <- &pb.UpdateCommandResp{
+				CommandType: pb.CommandType_TcpPing,
+				Version:     agent.ControllerTcpPingCommandVersion,
+			}
+		}
+	}
+}
+
+func (i *Controller) checkUpdateProc() {
+	ticker := time.NewTimer(30 * time.Second)
+	for range ticker.C {
+		i.checkUpdate()
+	}
+}
+
 func (i *Controller) Register(req *pb.RegisterReq, server pb.Controller_RegisterServer) error {
 	agent, err := i.agentRepo.FindWithPingTargets(context.Background(), req.AgentID)
 	if err != nil {
@@ -55,7 +92,7 @@ func (i *Controller) Register(req *pb.RegisterReq, server pb.Controller_Register
 	return nil
 }
 
-//　sendInitCommand 给 agent 发送初始化指令
+// 　sendInitCommand 给 agent 发送初始化指令
 func (i *Controller) sendInitCommand(agent *domain.Agent, server pb.Controller_RegisterServer) error {
 	resps := []*pb.UpdateCommandResp{{
 		CommandType: pb.CommandType_Ping,
@@ -85,7 +122,7 @@ func (i *Controller) initCH(agent *domain.Agent) chan *pb.UpdateCommandResp {
 		delete(i.agentIDCh, agent.ID)
 	}
 
-	ch := make(chan *pb.UpdateCommandResp)
+	ch := make(chan *pb.UpdateCommandResp, 2)
 	i.agentIDCh[agent.ID] = ch
 	return ch
 }

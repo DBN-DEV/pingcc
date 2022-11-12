@@ -4,21 +4,22 @@ go 1.19
 
 require (
 	github.com/hhyhhy/tsdb v0.2.2
-	github.com/influxdata/influxdb-client-go/v2 v2.11.0
+	github.com/influxdata/influxdb-client-go/v2 v2.12.0
 	github.com/outcaste-io/ristretto v0.2.0
 	github.com/planetscale/vtprotobuf v0.3.0
-	github.com/spf13/viper v1.13.0
+	github.com/spf13/viper v1.14.0
 	go.uber.org/zap v1.23.0
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
-	gorm.io/driver/postgres v1.4.4
-	gorm.io/gorm v1.24.0
+	gorm.io/driver/postgres v1.4.5
+	gorm.io/gorm v1.24.1
 )
 
 require (
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/deepmap/oapi-codegen v1.11.0 // indirect
+	github.com/deepmap/oapi-codegen v1.12.2 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
@@ -48,11 +49,11 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
-	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
-	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
-	golang.org/x/text v0.3.8 // indirect
-	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a // indirect
+	golang.org/x/crypto v0.2.0 // indirect
+	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
+	google.golang.org/genproto v0.0.0-20221111202108-142d8a6fa32e // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

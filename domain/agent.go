@@ -41,6 +41,7 @@ func (a *Agent) ActivateByGetTcpPingComm(commVer string) {
 }
 
 type AgentRepo interface {
+	Find(ctx context.Context, id uint64) (*Agent, error)
 	FindWithPingTargets(ctx context.Context, id uint64) (*Agent, error)
 	FindWithTcpPingTargets(ctx context.Context, id uint64) (*Agent, error)
 	AllWithPingTargets(ctx context.Context) ([]Agent, error)
@@ -53,6 +54,15 @@ func NewAgentRepo(db *gorm.DB) *AgentRepoImpl {
 
 type AgentRepoImpl struct {
 	db *gorm.DB
+}
+
+func (i *AgentRepoImpl) Find(ctx context.Context, id uint64) (*Agent, error) {
+	var a Agent
+	if err := i.db.WithContext(ctx).Where("id = ?", id).First(&a).Error; err != nil {
+		return nil, err
+	}
+
+	return &a, nil
 }
 
 func (i *AgentRepoImpl) FindWithPingTargets(ctx context.Context, id uint64) (*Agent, error) {
