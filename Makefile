@@ -1,15 +1,10 @@
-all: gen-pb build
-
-gen: install-gogrpc install-vtprotobuf gen-pb
+all: build
 
 build:
 	go build -o bin/pingcc main.go
 
-gen-pb:
-	mkdir ./pb && protoc --go-grpc_out=./pb --go_out=./pb --go-vtproto_out=./pb --go-vtproto_opt=features=marshal+unmarshal+size ./proto/*.proto
+fmt:
+	goimports -local github.com/DBN-DEV/pingcc -l -w .
 
-install-gogrpc:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-install-vtprotobuf:
-	go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@latest
+gen-mocks:
+	mockery --all

@@ -2,86 +2,67 @@ package app
 
 import (
 	"context"
-	"time"
 
-	"github.com/hhyhhy/tsdb"
+	"github.com/DBN-DEV/pingpb/gopb"
 	"go.uber.org/zap"
 
-	"pingcc/domain"
-	"pingcc/log"
-	"pingcc/pb"
+	"github.com/DBN-DEV/pingcc/domain"
+	"github.com/DBN-DEV/pingcc/log"
 )
 
-type PingResult struct {
-	RttMicros uint32
-	IsTimeout bool
-}
-
 type Collector struct {
-	pb.UnimplementedCollectorServer
-
-	tsdb     *tsdb.TSDB[PingResult]
-	pingRepo domain.PingTargetRepo
-	tcpRepo  domain.TcpPingTargetRepo
+	gopb.UnimplementedCollectorServer
 
 	logger *zap.Logger
+
+	tsdb TSDB
+
+	pingTaskRepo    PingTaskRepo
+	tcpPingTaskRepo TcpPingTaskRepo
 }
 
-func NewCollector(tsdb *tsdb.TSDB[PingResult], pingRepo domain.PingTargetRepo, tcpRepo domain.TcpPingTargetRepo) *Collector {
-	logger := log.LWithSvcName("collector")
-	return &Collector{tsdb: tsdb, pingRepo: pingRepo, tcpRepo: tcpRepo, logger: logger}
-}
-
-func (i *Collector) PingReport(ctx context.Context, req *pb.PingReportReq) (*pb.Empty, error) {
-	points := make([]tsdb.Point[PingResult], 0, len(req.Results))
-	for _, r := range req.Results {
-		t, err := i.pingRepo.Find(ctx, r.ID)
+func (i *Collector) PingReport(ctx context.Context, req *gopb.GrpcPingReportReq) (*gopb.Empty, error) {
+	for _, result := range req.Results {
+		task, err := i.pingTaskRepo.Find(ctx, result.PingTaskUID)
 		if err != nil {
-			i.logger.Info("Fail to find icmp target", zap.Error(err), zap.Uint64("id", r.ID))
-			continue
+			i.logger.Warn("Failed to find ping task", zap.Error(err), zap.Uint64("uid", result.PingTaskUID), log.AgentUID(req.AgentUID))
 		}
-
-		tags := append(t.Tags(), tsdb.Tag{Key: "measurement", Value: "icmp"})
-		data := PingResult{
-			RttMicros: r.RttMicros,
-			IsTimeout: r.IsTimeout,
+		r := convertToPingResult(result, task)
+		if err := i.tsdb.InsertPingResult(ctx, r); err != nil {
+			i.logger.Warn("Failed to insert ping result", zap.Error(err), log.AgentUID(req.AgentUID))
 		}
-		p := tsdb.NewPoint[PingResult](tags, time.Unix(r.SendAt, 0), data)
-		points = append(points, p)
 	}
 
-	if err := i.tsdb.WritePoints(points); err != nil {
-		i.logger.Info("Fail to write ping point", zap.Error(err))
-	}
-
-	return &pb.Empty{}, nil
+	return &gopb.Empty{}, nil
 }
 
-func (i *Collector) TcpPingReport(ctx context.Context, req *pb.TcpPingReportReq) (*pb.Empty, error) {
-	points := make([]tsdb.Point[PingResult], 0, len(req.Results))
-	for _, r := range req.Results {
-		t, err := i.tcpRepo.Find(ctx, r.ID)
+func convertToPingResult(result *gopb.GrpcPingResult, task *domain.PingTask) domain.PingResult {
+	return domain.PingResult{
+		RttMicros: result.RttMicros,
+		IsTimeout: result.IsTimeout,
+		Tag:       task.Tag.Data(),
+	}
+}
+
+func convertToTcpPingResult(result *gopb.GrpcTcpPingResult, task *domain.TcpPingTask) domain.TcpPingResult {
+	return domain.TcpPingResult{
+		RttMicros: result.RttMicros,
+		IsTimeout: result.IsTimeout,
+		Tag:       task.Tag.Data(),
+	}
+}
+
+func (i *Collector) TcpPingReport(ctx context.Context, req *gopb.GrpcTcpPingReportReq) (*gopb.Empty, error) {
+	for _, result := range req.Results {
+		task, err := i.tcpPingTaskRepo.Find(ctx, result.TcpPingTaskUID)
 		if err != nil {
-			i.logger.Info("Fail to find tcp target", zap.Error(err), zap.Uint64("id", r.ID))
-			continue
+			i.logger.Warn("Failed to find ping task", zap.Error(err), zap.Uint64("uid", result.TcpPingTaskUID), log.AgentUID(req.AgentUID))
 		}
-
-		tags := append(t.Tags(), tsdb.Tag{Key: "measurement", Value: "tcp"})
-		data := PingResult{
-			RttMicros: r.RttMicros,
-			IsTimeout: r.IsTimeout,
+		r := convertToTcpPingResult(result, task)
+		if err := i.tsdb.InsertTcpPingResult(ctx, r); err != nil {
+			i.logger.Warn("Failed to insert ping result", zap.Error(err), log.AgentUID(req.AgentUID))
 		}
-		p := tsdb.NewPoint[PingResult](tags, time.Unix(r.SendAt, 0), data)
-		points = append(points, p)
 	}
 
-	if err := i.tsdb.WritePoints(points); err != nil {
-		i.logger.Info("Fail to write tcp ping points", zap.Error(err))
-	}
-
-	return &pb.Empty{}, nil
-}
-
-func (i *Collector) FpingReport(ctx context.Context, req *pb.FPingReportReq) (*pb.Empty, error) {
-	return &pb.Empty{}, nil
+	return &gopb.Empty{}, nil
 }
