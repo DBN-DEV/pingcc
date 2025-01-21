@@ -54,3 +54,7 @@ func S() *zap.SugaredLogger {
 func LWithSvcName(name string) *zap.Logger {
 	return L().With(zap.String("Service", name))
 }
+
+func AgentUID(uid uint64) zap.Field {
+	return zap.Uint64("AgentUID", uid)
+}
